@@ -55,5 +55,7 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          git lfs install
+          git lfs migrate import --include="*.pkl" --everything
           git remote add space https://rriviere:$HF_TOKEN@huggingface.co/spaces/rriviere/credit-scoring-api
           git push space main --force
