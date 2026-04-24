@@ -13,3 +13,7 @@ venv/
 
 # MLflow
 mlflow.db
+
+# Coverage
+.coverage
+htmlcov/
