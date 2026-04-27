@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Credit Scoring API",
     description="Prédit la probabilité de défaut de paiement d'un client.",
-    version="1.0.0",
+    version="0.3.0",
     lifespan=lifespan,
 )
 
