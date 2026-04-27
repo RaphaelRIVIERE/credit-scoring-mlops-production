@@ -17,3 +17,6 @@ mlflow.db
 # Coverage
 .coverage
 htmlcov/
+
+# Data (fichiers volumineux, non versionnés)
+data/
