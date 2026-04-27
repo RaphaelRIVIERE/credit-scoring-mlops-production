@@ -158,6 +158,37 @@ python scripts/simulate_production.py --n 200 --drift \
 | `--api-url` | localhost:8000 | URL cible |
 | `--api-key` | `$API_KEY` du `.env` | Clé API |
 
+## Analyse du Data Drift
+
+Le notebook `monitoring/drift_report.ipynb` compare deux fenêtres de données de production pour détecter une dérive des distributions :
+
+- **Référence** : trafic enregistré sans drift (batch initial)
+- **Courant** : trafic enregistré avec drift (batch récent)
+
+Les deux jeux de données sont chargés directement depuis PostgreSQL — aucun fichier CSV n'est nécessaire.
+
+### Générer le rapport
+
+```bash
+# Exécuter le notebook et exporter le rapport HTML
+jupyter nbconvert --to notebook --execute monitoring/drift_report.ipynb --output monitoring/drift_report.ipynb
+
+# Ouvrir le rapport interactif dans un navigateur
+open monitoring/reports/drift_report.html   # macOS
+xdg-open monitoring/reports/drift_report.html  # Linux
+```
+
+Le rapport Evidently analyse les features clés : `DAYS_BIRTH`, `AMT_INCOME_TOTAL`, `AMT_CREDIT`, `AMT_ANNUITY`, `EXT_SOURCE_1/2/3`, `score`.
+
+### Interprétation
+
+Sur les données simulées : **7/8 features en drift significatif** (test de Kolmogorov-Smirnov, p < 0.05). Le score moyen passe de 0.33 à 0.51, signe que les profils reçus sont systématiquement plus risqués que ceux sur lesquels le modèle a été entraîné.
+
+Le notebook détaille :
+- quelles features driftent et dans quel sens (âge, revenus, scores externes décalés)
+- les deux risques métier : sous-estimation du risque de défaut et biais de sélection
+- les seuils d'alerte et actions recommandées (surveillance hebdomadaire, déclenchement d'un ré-entraînement si ≥ 3 features clés en drift)
+
 ## CI/CD
 
 Le pipeline GitHub Actions (`.github/workflows/ci-cd.yml`) se déclenche à chaque push ou pull request sur `main` et enchaîne trois jobs :
@@ -227,9 +258,6 @@ credit-scoring-mlops-production/
 ├── scripts/
 │   └── simulate_production.py  # Simulation de trafic avec drift optionnel
 ├── tests/  # Tests unitaires et d'intégration
-├── data/
-│   └── reference/   # Données de référence pour l'analyse de drift
-│       └── train_sample.csv  # À placer manuellement (non versionné)
 ├── model/                  # Artefacts MLflow (modèle versionné)
 ├── .github/
 │   └── workflows/
