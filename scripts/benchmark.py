@@ -2,16 +2,18 @@
 Benchmark mlflow.pyfunc vs joblib direct.
 
 Usage:
-    python scripts/benchmark.py
-    python -m cProfile -s cumtime scripts/benchmark.py 2>&1 | head -30
+    python scripts/benchmark.py --loader mlflow   # baseline
+    python scripts/benchmark.py --loader joblib   # optimisé
 """
 
+import argparse
 import cProfile
 import io
 import json
 import pstats
 import time
 from datetime import datetime
+import joblib
 import numpy as np
 import pandas as pd
 import psutil
@@ -52,14 +54,20 @@ def _stats(values: list[float], label: str, unit: str = "ms") -> dict:
     return result
 
 
-def _profile_inference(model, sample: dict) -> list[dict]:
+def _infer(model, df, loader: str) -> float:
+    if loader == "joblib":
+        return float(model.predict_proba(df)[0][1])
+    return float(model.predict(df)[0][1])
+
+
+def _profile_inference(model, sample: dict, loader: str) -> list[dict]:
     """Lance cProfile sur une inférence et retourne le top 10 par cumtime."""
     df = pd.DataFrame([sample])
     df = feature_engineering(df)
 
     pr = cProfile.Profile()
     pr.enable()
-    model.predict(df)
+    _infer(model, df, loader)
     pr.disable()
 
     stream = io.StringIO()
@@ -83,7 +91,7 @@ def _profile_inference(model, sample: dict) -> list[dict]:
     return entries
 
 
-def run_benchmark(model, sample: dict) -> dict:
+def run_benchmark(model, sample: dict, loader: str) -> dict:
     preprocess_times: list[float] = []
     inference_times: list[float] = []
     cpu_usages: list[float] = []
@@ -98,7 +106,7 @@ def run_benchmark(model, sample: dict) -> dict:
         # Inférence + CPU
         psutil.cpu_percent(interval=None)  # reset le compteur CPU
         t0 = time.perf_counter()
-        model.predict(df)
+        _infer(model, df, loader)
         inference_times.append((time.perf_counter() - t0) * 1000)
         cpu_usages.append(psutil.cpu_percent(interval=None))
 
@@ -110,36 +118,46 @@ def run_benchmark(model, sample: dict) -> dict:
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--loader", choices=["mlflow", "joblib"], default="mlflow")
+    args = parser.parse_args()
+    loader = args.loader
+
     sample = _load_sample()
 
     print("=" * 55)
-    print(f"  Benchmark mlflow.pyfunc — {N_ITER} itérations")
+    print(f"  Benchmark {loader} — {N_ITER} itérations")
     print("=" * 55)
 
     # Chargement du modèle (mesuré une seule fois)
     t0 = time.perf_counter()
-    model = mlflow.pyfunc.load_model(MODEL_PATH)
+    if loader == "joblib":
+        model = joblib.load(f"{MODEL_PATH}/model.pkl")
+        loader_label = "joblib"
+    else:
+        model = mlflow.pyfunc.load_model(MODEL_PATH)
+        loader_label = "mlflow.pyfunc"
     load_time_ms = (time.perf_counter() - t0) * 1000
     print(f"\n  Chargement du modèle : {load_time_ms:.1f} ms")
 
-    results = run_benchmark(model, sample)
+    results = run_benchmark(model, sample, loader)
     stats_preprocess = _stats(results["preprocess"], "Préprocessing")
-    stats_inference = _stats(results["inference"], "Inférence")
-    stats_cpu = _stats(results["cpu"], "CPU pendant l'inférence", unit="%")
+    stats_inference = _stats(results["inference"],  "Inférence")
+    stats_cpu = _stats(results["cpu"],        "CPU pendant l'inférence", unit="%")
 
     print("\n" + "=" * 55)
     print("  Score de référence (1ère prédiction) :")
     df = pd.DataFrame([sample])
     df = feature_engineering(df)
-    score = float(model.predict(df)[0][1])
+    score = _infer(model, df, loader)
     print(f"    score = {score:.4f}")
     print("=" * 55)
 
-    bottlenecks = _profile_inference(model, sample)
+    bottlenecks = _profile_inference(model, sample, loader)
 
     output = {
         "run_at": datetime.now().isoformat(),
-        "loader": "mlflow.pyfunc",
+        "loader": loader_label,
         "n_iter": N_ITER,
         "load_time_ms": round(load_time_ms, 3),
         "preprocess": stats_preprocess,
@@ -148,7 +166,7 @@ def main():
         "ref_score": round(score, 4),
         "profiling_bottlenecks": bottlenecks,
     }
-    loader_slug = output["loader"].replace(".", "_").replace("/", "_")
+    loader_slug = loader_label.replace(".", "_").replace("/", "_")
     out_path = f"monitoring/benchmark_{loader_slug}.json"
     with open(out_path, "w") as f:
         json.dump(output, f, indent=2)
