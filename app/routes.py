@@ -34,7 +34,7 @@ def predict(request: Request, features: ClientFeatures, _: None = Security(_veri
     data = pd.DataFrame([features.model_dump()])
     data = feature_engineering(data)
     t0 = time.perf_counter()
-    score = float(model_state.model.predict(data)[0][1])
+    score = float(model_state.model.predict_proba(data)[0][1])
     inference_time_ms = (time.perf_counter() - t0) * 1000
     decision = "rejected" if score >= THRESHOLD else "approved"
     request.state.prediction_id = log_prediction(features, score, decision, inference_time_ms)

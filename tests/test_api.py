@@ -22,7 +22,7 @@ API_KEY = "test-secret-key"
 @pytest.fixture
 def client():
     mock_model = MagicMock()
-    mock_model.predict.return_value = [[0.7, 0.3]]
+    mock_model.predict_proba.return_value = [[0.7, 0.3]]
 
     def fake_load(_):
         model_state.model = mock_model
@@ -31,7 +31,7 @@ def client():
     Base.metadata.create_all(test_engine)
 
     api_key_hash = hashlib.sha256(API_KEY.encode()).hexdigest()
-    with patch.object(model_state, "load", fake_load):
+    with patch.object(model_state, "load_joblib", fake_load):
         with patch.object(routes_module, "_API_KEY_HASH", api_key_hash):
             with patch("app.logger.get_engine", return_value=test_engine):
                 with TestClient(app) as c:
@@ -145,7 +145,7 @@ def test_predict_invalid_amt_annuity(client):
 
 def test_predict_threshold_boundary_rejected(client):
     mock_model = MagicMock()  # score == 0.5 : la borne est inclusive, donc rejeté
-    mock_model.predict.return_value = [[0.5, 0.5]]
+    mock_model.predict_proba.return_value = [[0.5, 0.5]]
     with patch.object(model_state, "model", mock_model):
         response = client.post(
             "/predict",
@@ -160,7 +160,7 @@ def test_predict_threshold_boundary_rejected(client):
 
 def test_predict_threshold_boundary_approved(client):
     mock_model = MagicMock()  # score juste sous 0.5 : approuvé
-    mock_model.predict.return_value = [[0.5001, 0.4999]]
+    mock_model.predict_proba.return_value = [[0.5001, 0.4999]]
     with patch.object(model_state, "model", mock_model):
         response = client.post(
             "/predict",
