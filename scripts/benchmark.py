@@ -6,7 +6,10 @@ Usage:
     python -m cProfile -s cumtime scripts/benchmark.py 2>&1 | head -30
 """
 
+import cProfile
+import io
 import json
+import pstats
 import time
 from datetime import datetime
 import numpy as np
@@ -47,6 +50,37 @@ def _stats(values: list[float], label: str, unit: str = "ms") -> dict:
     print(f"    p95 : {result['p95']:.3f}")
     print(f"    p99 : {result['p99']:.3f}")
     return result
+
+
+def _profile_inference(model, sample: dict) -> list[dict]:
+    """Lance cProfile sur une inférence et retourne le top 10 par cumtime."""
+    df = pd.DataFrame([sample])
+    df = feature_engineering(df)
+
+    pr = cProfile.Profile()
+    pr.enable()
+    model.predict(df)
+    pr.disable()
+
+    stream = io.StringIO()
+    ps = pstats.Stats(pr, stream=stream).sort_stats("cumulative")
+    ps.print_stats(10)
+
+    entries = []
+    for line in stream.getvalue().splitlines():
+        parts = line.split()
+        if len(parts) < 6:
+            continue
+        try:
+            entries.append({
+                "function": parts[-1],
+                "ncalls":   parts[0],
+                "cumtime_s": float(parts[3]),
+                "percall_s": float(parts[4]),
+            })
+        except ValueError:
+            pass
+    return entries
 
 
 def run_benchmark(model, sample: dict) -> dict:
@@ -101,6 +135,8 @@ def main():
     print(f"    score = {score:.4f}")
     print("=" * 55)
 
+    bottlenecks = _profile_inference(model, sample)
+
     output = {
         "run_at": datetime.now().isoformat(),
         "loader": "mlflow.pyfunc",
@@ -110,6 +146,7 @@ def main():
         "inference": stats_inference,
         "cpu": stats_cpu,
         "ref_score": round(score, 4),
+        "profiling_bottlenecks": bottlenecks,
     }
     loader_slug = output["loader"].replace(".", "_").replace("/", "_")
     out_path = f"monitoring/benchmark_{loader_slug}.json"
