@@ -56,10 +56,10 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           git lfs install
-          echo "y" | git lfs migrate import --include="*.pkl" --everything
           git config user.email "ci@github.com"
           git config user.name "GitHub Actions"
+          git checkout --orphan hf-deploy
           git rm -rf --cached docs/
-          git commit -m "deploy: exclude docs from HF Space"
+          git commit -m "deploy: $(git log --format='%h' origin/main -1)"
           git remote add space https://rriviere:$HF_TOKEN@huggingface.co/spaces/rriviere/credit-scoring-api
-          git push space main --force
+          git push space hf-deploy:main --force
