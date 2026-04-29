@@ -56,7 +56,7 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           git lfs install
-          git lfs migrate import --include="*.pkl" --everything
+          echo "y" | git lfs migrate import --include="*.pkl" --everything
           git config user.email "ci@github.com"
           git config user.name "GitHub Actions"
           git rm -rf --cached docs/
