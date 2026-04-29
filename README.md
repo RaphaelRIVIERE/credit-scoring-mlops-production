@@ -189,6 +189,24 @@ Le notebook détaille :
 - les deux risques métier : sous-estimation du risque de défaut et biais de sélection
 - les seuils d'alerte et actions recommandées (surveillance hebdomadaire, déclenchement d'un ré-entraînement si ≥ 3 features clés en drift)
 
+## Optimisation des performances
+
+Le script `scripts/benchmark.py` mesure et compare deux méthodes de chargement du modèle sur 200 itérations : `mlflow.pyfunc.load_model` (baseline) et `joblib.load` (version optimisée).
+
+Métriques collectées par requête : temps de préprocessing, temps d'inférence, utilisation CPU. Un profiling cProfile est également effectué automatiquement pour identifier les goulots d'étranglement.
+
+```bash
+# Baseline
+PYTHONPATH=. python scripts/benchmark.py --loader mlflow 2>/dev/null
+
+# Version optimisée
+PYTHONPATH=. python scripts/benchmark.py --loader joblib 2>/dev/null
+```
+
+Les résultats sont sauvegardés dans `monitoring/benchmark_mlflow_pyfunc.json` et `monitoring/benchmark_joblib.json`. Le notebook `monitoring/performance_report.ipynb` compare les deux versions et documente les gains.
+
+**Résultats clés** : le gain principal se situe au chargement du modèle (~−70%, de ~2 900 ms à ~870 ms). Le temps d'inférence est identique dans les deux cas (~5–6 ms), car c'est le même pipeline sklearn qui s'exécute sous les deux loaders. La version joblib est retenue en production.
+
 ## CI/CD
 
 Le pipeline GitHub Actions (`.github/workflows/ci-cd.yml`) se déclenche à chaque push ou pull request sur `main` et enchaîne trois jobs :
@@ -256,8 +274,14 @@ credit-scoring-mlops-production/
 ├── src/ # Modules métier
 │   └── preprocessing.py    # Feature engineering
 ├── scripts/
-│   └── simulate_production.py  # Simulation de trafic avec drift optionnel
+│   ├── simulate_production.py  # Simulation de trafic avec drift optionnel
+│   └── benchmark.py            # Benchmark mlflow.pyfunc vs joblib (200 itérations)
 ├── tests/  # Tests unitaires et d'intégration
+├── monitoring/
+│   ├── drift_report.ipynb      # Analyse du data drift (Evidently)
+│   ├── performance_report.ipynb # Rapport d'optimisation mlflow vs joblib
+│   ├── benchmark_mlflow_pyfunc.json  # Résultats benchmark baseline
+│   └── benchmark_joblib.json   # Résultats benchmark version optimisée
 ├── model/                  # Artefacts MLflow (modèle versionné)
 ├── .github/
 │   └── workflows/

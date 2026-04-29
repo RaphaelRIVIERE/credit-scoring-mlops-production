@@ -15,7 +15,7 @@ MODEL_PATH = os.getenv("MODEL_PATH", "model")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    model_state.load(MODEL_PATH)
+    model_state.load_joblib(MODEL_PATH)
     init_db()
     yield
 

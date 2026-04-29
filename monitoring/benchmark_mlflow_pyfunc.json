@@ -1,0 +1,87 @@
+{
+  "run_at": "2026-04-28T16:15:55.811632",
+  "loader": "mlflow.pyfunc",
+  "n_iter": 200,
+  "load_time_ms": 2868.702,
+  "preprocess": {
+    "mean": 3.1214078899574815,
+    "median": 3.0277479982032673,
+    "p95": 3.7155396985326647,
+    "p99": 4.470497291113133
+  },
+  "inference": {
+    "mean": 5.729957569910766,
+    "median": 5.359852500987472,
+    "p95": 7.980051849699517,
+    "p99": 11.692219219585235
+  },
+  "cpu": {
+    "mean": 14.5645,
+    "median": 14.3,
+    "p95": 50.0,
+    "p99": 54.5
+  },
+  "ref_score": 0.8173,
+  "profiling_bottlenecks": [
+    {
+      "function": "/home/rapha/ai-engineer/credit-scoring-mlops-production/scripts/benchmark.py:57(_infer)",
+      "ncalls": "1",
+      "cumtime_s": 0.016,
+      "percall_s": 0.016
+    },
+    {
+      "function": "/home/rapha/ai-engineer/credit-scoring-mlops-production/.venv/lib/python3.12/site-packages/mlflow/pyfunc/__init__.py:835(predict)",
+      "ncalls": "1",
+      "cumtime_s": 0.016,
+      "percall_s": 0.016
+    },
+    {
+      "function": "/home/rapha/ai-engineer/credit-scoring-mlops-production/.venv/lib/python3.12/site-packages/mlflow/pyfunc/__init__.py:845(_predict)",
+      "ncalls": "1",
+      "cumtime_s": 0.016,
+      "percall_s": 0.016
+    },
+    {
+      "function": "/home/rapha/ai-engineer/credit-scoring-mlops-production/.venv/lib/python3.12/site-packages/sklearn/pipeline.py:815(predict_proba)",
+      "ncalls": "1",
+      "cumtime_s": 0.016,
+      "percall_s": 0.016
+    },
+    {
+      "function": "/home/rapha/ai-engineer/credit-scoring-mlops-production/.venv/lib/python3.12/site-packages/sklearn/utils/_set_output.py:314(wrapped)",
+      "ncalls": "5/1",
+      "cumtime_s": 0.013,
+      "percall_s": 0.013
+    },
+    {
+      "function": "/home/rapha/ai-engineer/credit-scoring-mlops-production/.venv/lib/python3.12/site-packages/sklearn/compose/_column_transformer.py:1031(transform)",
+      "ncalls": "1",
+      "cumtime_s": 0.013,
+      "percall_s": 0.013
+    },
+    {
+      "function": "/home/rapha/ai-engineer/credit-scoring-mlops-production/.venv/lib/python3.12/site-packages/sklearn/compose/_column_transformer.py:829(_call_func_on_transformers)",
+      "ncalls": "1",
+      "cumtime_s": 0.013,
+      "percall_s": 0.013
+    },
+    {
+      "function": "/home/rapha/ai-engineer/credit-scoring-mlops-production/.venv/lib/python3.12/site-packages/sklearn/utils/parallel.py:54(__call__)",
+      "ncalls": "1",
+      "cumtime_s": 0.011,
+      "percall_s": 0.011
+    },
+    {
+      "function": "/home/rapha/ai-engineer/credit-scoring-mlops-production/.venv/lib/python3.12/site-packages/joblib/parallel.py:1969(__call__)",
+      "ncalls": "1",
+      "cumtime_s": 0.011,
+      "percall_s": 0.011
+    },
+    {
+      "function": "/home/rapha/ai-engineer/credit-scoring-mlops-production/.venv/lib/python3.12/site-packages/joblib/parallel.py:1888(_get_sequential_output)",
+      "ncalls": "4",
+      "cumtime_s": 0.01,
+      "percall_s": 0.003
+    }
+  ]
+}
