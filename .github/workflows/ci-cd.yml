@@ -59,6 +59,8 @@ jobs:
           git config user.email "ci@github.com"
           git config user.name "GitHub Actions"
           git checkout --orphan hf-deploy
+          git rm -rf --cached .
+          git add .
           git rm -rf --cached docs/
           git commit -m "deploy: $(git log --format='%h' origin/main -1)"
           git remote add space https://rriviere:$HF_TOKEN@huggingface.co/spaces/rriviere/credit-scoring-api
