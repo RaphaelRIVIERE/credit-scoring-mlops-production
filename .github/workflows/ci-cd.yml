@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 on:
   push:
@@ -51,11 +51,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install git-xet
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/huggingface/xet-core/refs/heads/main/git_xet/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
       - name: Push to Hugging Face Spaces
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git lfs install
-          git lfs migrate import --include="*.pkl" --everything
+          git xet install
           git remote add space https://rriviere:$HF_TOKEN@huggingface.co/spaces/rriviere/credit-scoring-api
-          git push space main --force
+          git push space main
