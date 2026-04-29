@@ -62,4 +62,4 @@ jobs:
         run: |
           git xet install
           git remote add space https://rriviere:$HF_TOKEN@huggingface.co/spaces/rriviere/credit-scoring-api
-          git push space main
+          git push space main --force
