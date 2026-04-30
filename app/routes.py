@@ -21,12 +21,30 @@ def _verify_api_key(api_key: str = Security(_api_key_header)):
         raise HTTPException(status_code=403, detail="Non autorisé")
 
 
-@router.get("/health")
+@router.get(
+    "/health",
+    tags=["Health"],
+    summary="Vérification de l'état du service",
+)
 def health():
     return {"status": "ok"}
 
 
-@router.post("/predict", response_model=PredictionResponse)
+@router.post(
+    "/predict",
+    tags=["Predictions"],
+    summary="Prédiction du risque de crédit",
+    description=(
+        "Soumet les features d'un client au modèle et retourne un score de défaut de paiement "
+        "ainsi qu'une décision d'octroi de crédit."
+    ),
+    response_description="Score de probabilité de défaut et décision d'octroi.",
+    responses={
+        403: {"description": "Clé API manquante ou invalide."},
+        503: {"description": "Modèle non chargé — service indisponible."},
+    },
+    response_model=PredictionResponse,
+)
 def predict(request: Request, features: ClientFeatures, _: None = Security(_verify_api_key)):
     if model_state.model is None:
         raise HTTPException(status_code=503, detail="Model not loaded")

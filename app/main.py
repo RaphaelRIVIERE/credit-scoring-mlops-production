@@ -22,7 +22,20 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Credit Scoring API",
-    description="Prédit la probabilité de défaut de paiement d'un client.",
+    description=(
+        "## Vue d'ensemble\n\n"
+        "API de scoring de crédit basée sur un modèle de machine learning entraîné sur le dataset "
+        "Home Credit Default Risk.\n\n"
+        "Elle prédit la **probabilité de défaut de paiement** d'un demandeur de crédit et retourne "
+        "une décision binaire (`approved` / `rejected`).\n\n"
+        "## Authentification\n\n"
+        "Toutes les routes protégées requièrent une clé API transmise dans l'en-tête HTTP :\n"
+        "```\nX-API-Key: <votre_clé>\n```\n\n"
+        "## Seuil de décision\n\n"
+        "La décision est basée sur un seuil fixé à **0.5** sur la probabilité de défaut :\n"
+        "- `score < 0.5` → **approved**\n"
+        "- `score ≥ 0.5` → **rejected**"
+    ),
     version="0.5.0",
     lifespan=lifespan,
 )
