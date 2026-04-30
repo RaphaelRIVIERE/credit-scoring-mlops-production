@@ -16,6 +16,7 @@ Suite du projet [credit-scoring-mlops](../credit-scoring-mlops), qui portait sur
 
 Modèle de scoring crédit développé pour "Prêt à Dépenser". Il prédit la probabilité de défaut de remboursement d'un client et retourne un score permettant d'accepter ou refuser une demande de crédit. Le modèle a été entraîné et versionné avec MLflow (LightGBM, optimisé via Optuna).
 
+![Architecture](docs/archi.png)
 
 ## Installation
 
@@ -96,6 +97,31 @@ curl -X POST http://localhost:8000/predict \
   -H "Content-Type: application/json" \
   -d '{"DAYS_BIRTH": -10000, "DAYS_EMPLOYED": -2000, "AMT_INCOME_TOTAL": 50000, "AMT_CREDIT": 200000, "AMT_ANNUITY": 15000}'
 ```
+
+## Collection Postman
+
+Le fichier [`docs/postman_collection.json`](docs/postman_collection.json) couvre l'ensemble des cas nominaux et d'erreur de l'API.
+
+**Import** : Postman → *Import* → glisser le fichier JSON.
+
+**Variables de collection à configurer** :
+
+| Variable | Valeur par défaut | Description |
+|---|---|---|
+| `base_url` | `https://rriviere-credit-scoring-api.hf.space` | Remplacer par `http://localhost:8000` en local |
+| `api_key` | `REMPLACER_PAR_CLE_API` | Clé API à renseigner avant de lancer les requêtes |
+
+**Requêtes incluses** :
+
+| # | Nom | Méthode | Code attendu |
+|---|---|---|---|
+| 1 | Health Check | GET | 200 |
+| 2 | Prédiction — Profil approuvé (117 champs) | POST | 200 `approved` |
+| 3 | Prédiction — Profil rejeté (117 champs) | POST | 200 `rejected` |
+| 4 | Erreur — Clé API manquante | POST | 403 |
+| 5 | Erreur — Type incorrect (`AMT_INCOME_TOTAL` = string) | POST | 422 |
+| 6 | Erreur — Valeur hors plage (`DAYS_BIRTH` > 0) | POST | 422 |
+| 7 | Erreur — Champ obligatoire manquant | POST | 422 |
 
 ## Docker
 
@@ -216,6 +242,8 @@ Le pipeline GitHub Actions (`.github/workflows/ci-cd.yml`) se déclenche à chaq
 | `test` | push + PR | Lance pytest avec seuil de couverture à 70% |
 | `docker-build` | push sur `main` uniquement | Construit l'image Docker |
 | `deploy` | push sur `main` uniquement | Déploie sur Hugging Face Spaces |
+
+![Pipeline CI/CD](docs/pipeline-ci-cd.png)
 
 ### Déploiement sur Hugging Face Spaces
 
