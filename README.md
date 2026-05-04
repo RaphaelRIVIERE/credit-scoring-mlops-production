@@ -231,7 +231,7 @@ PYTHONPATH=. python scripts/benchmark.py --loader joblib 2>/dev/null
 
 Les résultats sont sauvegardés dans `monitoring/benchmark_mlflow_pyfunc.json` et `monitoring/benchmark_joblib.json`. Le notebook `monitoring/performance_report.ipynb` compare les deux versions et documente les gains.
 
-**Résultats clés** : le gain principal se situe au chargement du modèle (~−70%, de ~2 900 ms à ~870 ms). Le temps d'inférence est identique dans les deux cas (~5–6 ms), car c'est le même pipeline sklearn qui s'exécute sous les deux loaders. La version joblib est retenue en production.
+**Résultats clés** : Le gain principal se situe au chargement du modèle (~−70%, de ~2 900 ms à ~870 ms). Le temps d'inférence est marginalement plus lent avec joblib (+4.1% en moyenne, +7.3% sur le p95), une différence négligeable de 0.2–0.6 ms. La version joblib est retenue en production.
 
 ## CI/CD
 

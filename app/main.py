@@ -36,7 +36,7 @@ app = FastAPI(
         "- `score < 0.5` → **approved**\n"
         "- `score ≥ 0.5` → **rejected**"
     ),
-    version="0.5.0",
+    version="1.0.0",
     lifespan=lifespan,
 )
 
