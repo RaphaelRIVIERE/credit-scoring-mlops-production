@@ -1,0 +1,5 @@
+{
+  "run_at": "2026-05-04T15:57:52.319840",
+  "conversion_ok": false,
+  "conversion_error": "The converter is implemented when the missing values are string not <class 'float'>."
+}
