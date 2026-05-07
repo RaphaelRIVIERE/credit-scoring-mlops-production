@@ -140,7 +140,7 @@ def test_predict_invalid_amt_annuity(client):
         json=payload,
         headers={"X-API-Key": API_KEY},
     )
-    assert response.status_code == 999
+    assert response.status_code == 422
 
 
 def test_predict_threshold_boundary_rejected(client):
